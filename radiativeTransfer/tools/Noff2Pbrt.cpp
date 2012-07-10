@@ -5,6 +5,7 @@
 #include <cctype>
 #include <cstring>
 #include <algorithm>
+#include <cmath>
 
 
 using namespace std;
@@ -15,7 +16,7 @@ void ecritFichierGeometrie(string fichierNoff, string fichierGeomPbrt);
 
 void ecritFichierPbrt(string fichierPbrt, string fichierGeomPbrt, string fichierEXR);
 
-void ecritFichierPhoton(string fichierPhoton, string fichierGeomPbrt);
+void ecritFichierPhoton(string fichierPhoton, string fichierGeomPbrt, double theta, double phi);
 
 
 
@@ -23,24 +24,26 @@ int main(int argc, char *argv[])
 {
 
   cout << "Warning !! the file provided must be noff without blank lines and with commentary only at the top !\nThe normals provided MUST be inwarded"<< endl; 
-  if (argc < 2) {
-    cout<< "bad syntax. The syntax is : <command> -i input.off -o output";
+  if (argc < 4) {
+    cout<< "bad syntax. The syntax is : <command> -i input.off -o output --theta --phi";
     exit(2);
   }
 
   string fichierNoff, fichier_sortie;
   bool entre(false), sortie(false);
-
+  double theta,phi;
 
   for (int i=1; i<argc;i++){
     if (!strcmp(argv[i],"--help") || !strcmp(argv[i],"--help")){cout << "syntax : <command> -i input.noff -o output\n"; return 0;}
     else if (!strcmp(argv[i],"--input") || !strcmp(argv[i],"-i")) {fichierNoff=argv[++i]; entre=true;}
     else if (!strcmp(argv[i],"--output") || !strcmp(argv[i],"-o")) {fichier_sortie=argv[++i]; sortie=true;}
+    else if (!strcmp(argv[i],"--theta") || !strcmp(argv[i],"-t")) {theta = atof(argv[++i]); sortie=true;}
+    else if (!strcmp(argv[i],"--phi") || !strcmp(argv[i],"-p")) {phi = atof(argv[++i]); sortie=true;}
   }
 
   if (!entre || !sortie) 
     {
-      cout << "syntax : <command> -i input.noff -o output\n"; 
+      cout << "syntax : <command> -i input.noff -o output -t theta -p phi\n"; 
       exit(1);
     }
   //on prend en entrée un fichier noff et on sort 2 fichier : un de geometrie et le corps du fichier .pbrt
@@ -62,7 +65,7 @@ int main(int argc, char *argv[])
 
   ecritFichierPbrt(fichierPbrt,fichierGeomPbrt,fichierEXR);
 
-  ecritFichierPhoton(fichierPhoton, fichierGeomPbrt);
+  ecritFichierPhoton(fichierPhoton, fichierGeomPbrt, theta, phi);
 
   cout <<"the length of the image file is "<<maxX-minX <<" * " << maxY -minY << " * "<< maxZ-minZ <<endl;
 
@@ -262,16 +265,22 @@ if (Maximum==0){cout << "geometry file is empty !!!" <<endl; Maximum=1;}
 
 
 //la fonction qui sort le fichier pour le lanceur de photon
-void ecritFichierPhoton(string fichierPhoton, string fichierGeomPbrt){
+void ecritFichierPhoton(string fichierPhoton, string fichierGeomPbrt, double theta, double phi){
   double facteur=(maxZ-minZ)/256;
 
   ofstream fichierSortiePhoton(fichierPhoton.c_str());
+
+  
+  fichierSortiePhoton << "# Light source parameters "<<std::endl;
+  fichierSortiePhoton << "# theta = "<< theta<<std::endl;
+  fichierSortiePhoton << "# phi = "<< phi<<std::endl;
 
   //on definit la photonmap
   fichierSortiePhoton << "## causticphotons = number of launched photons;\n## maxdepth= max number of intersections for one photon before stopping\n\nSurfaceIntegrator \"photonmap\" \"integer indirectphotons\" [0] \"integer causticphotons\" [20000]\n\"integer maxspeculardepth\" [100000] \"integer maxphotondepth\" [100000]\n\n";
 
   //definition de la source de lumiere
-  fichierSortiePhoton << "#ligth source : to change the direction of the source change point from and point to, only the direction is important \nWorldBegin\n \nAttributeBegin\nLightSource \"distant\" \"point from\" [0 0 50] \"point to\" [0 0 0]\nAttributeEnd\n\n";
+  fichierSortiePhoton << "#ligth source : to change the direction of the source change point from and point to, only the direction is important \nWorldBegin\n \nAttributeBegin\nLightSource \"distant\" \"point from\"";
+  fichierSortiePhoton << "["<< 100*sin(theta)*cos(phi) <<" " << 100*sin(theta)*sin(phi)<<" "<< 100*cos(theta)<<"] \"point to\" [0 0 0]\nAttributeEnd\n\n";
 
   //pour dupliquer l'echantillon et prendre en compte la profondeur
   fichierSortiePhoton << "#to duplicate the sample and take care of the depth, we create a cube wich will surround the sample\n\nAttributeBegin\nMaterial \"glass\"\nShape \"trianglemesh\" \"integer indices\" [0 1 2]\n\"point P\" [0 0 256.001 " << (maxX-minX)/facteur << " 0 256.001 0 " << (maxY-minY)/facteur << " 256.001]\n\"normal N\" [0 0 1 0 0 1 0 0 1]\n\nShape \"trianglemesh\" \"integer indices\" [0 1 2]\n\"point P\" [ "<< (maxX-minX)/facteur<< " 0 256.001 0 "<<(maxY-minY)/facteur<< " 256.001 "<<(maxX-minX)/facteur<< " "<<(maxY-minY)/facteur<< " 256.001]\n\"normal N\" [0 0 1 0 0 1 0 0 1]\n\nShape \"trianglemesh\" \"integer indices\" [0 1 2]\n\"point P\" [0 0 0 " << (maxX-minX)/facteur <<" 0 0 0 " << (maxY-minY)/facteur << " 0]\n\"normal N\" [0 0 -1 0 0 -1 0 0 -1]\n\nShape \"trianglemesh\" \"integer indices\" [0 1 2]\n\"point P\" [" << (maxX-minX)/facteur <<" 0 0 0 " << (maxY-minY)/facteur <<" 0 " << (maxX-minX)/facteur <<" " << (maxY-minY)/facteur <<" 0]\n\"normal N\" [0 0 -1 0 0 -1 0 0 -1]\n\nShape \"trianglemesh\" \"integer indices\" [0 2 1]\n\"point P\" [0 0 0 " << (maxX-minX)/facteur <<" 0 0 0 0 256]\n\"normal N\" [0 -1 0 0 -1 0 0 -1 0]\n\nShape \"trianglemesh\" \"integer indices\" [0 2 1]\n\"point P\" [" << (maxX-minX)/facteur <<" 0 0 0 0 256 " << (maxX-minX)/facteur <<" 0 256]\n\"normal N\" [0 -1 0 0 -1 0 0 -1 0]\n\nShape \"trianglemesh\" \"integer indices\" [0 1 2]\n\"point P\" [0 " << (maxY-minY)/facteur <<" 0 " << (maxX-minX)/facteur <<" " << (maxY-minY)/facteur <<" 0 0 " << (maxY-minY)/facteur <<" 256]\n\"normal N\" [0 1 0 0 1 0 0 1 0]\n\nShape \"trianglemesh\" \"integer indices\" [0 2 1]\n\"point P\" [" << (maxX-minX)/facteur <<" " << (maxY-minY)/facteur <<" 0 0 " << (maxY-minY)/facteur <<" 256 " << (maxX-minX)/facteur <<" " << (maxY-minY)/facteur <<" 256]\n\"normal N\" [0 1 0 0 1 0 0 1 0]\n\nShape \"trianglemesh\" \"integer indices\" [0 1 2]\n\"point P\" [" << (maxX-minX)/facteur <<" 0 256 " << (maxX-minX)/facteur <<" 0 0 " << (maxX-minX)/facteur <<" " << (maxY-minY)/facteur <<" 0]\n\"normal N\" [1 0 0 1 0 0 1 0 0]\n\nShape \"trianglemesh\" \"integer indices\" [0 1 2]\n\"point P\" [" << (maxX-minX)/facteur <<" " << (maxY-minY)/facteur <<" 0 " << (maxX-minX)/facteur <<" 0 256 " << (maxX-minX)/facteur <<" " << (maxY-minY)/facteur <<" 256]\n\"normal N\" [1 0 0 1 0 0 1 0 0]\n\nShape \"trianglemesh\" \"integer indices\" [0 1 2]\n\"point P\" [0 0 0 0 0 256 0 " << (maxY-minY)/facteur <<" 0]\n\"normal N\" [-1 0 0 -1 0 0 -1 0 0]\n\nShape \"trianglemesh\" \"integer indices\" [0 1 2]\n\"point P\" [0 0 256 0 " << (maxY-minY)/facteur <<" 0 0 " << (maxY-minY)/facteur <<" 256]\n\"normal N\" [-1 0 0 -1 0 0 -1 0 0]\n\nAttributeEnd\n";
