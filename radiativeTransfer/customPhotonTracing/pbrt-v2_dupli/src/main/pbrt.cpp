@@ -42,7 +42,6 @@ int main(int argc, char *argv[]) {
 
 	//[DGtal on met que un coeur pour avoir tous les calculs séquentiels et les résultats dans un seul fichier
 	bool wavelength(false), resPix(false), dimensionX(false),dimensionY(false),dimensionZ(false), ImagePhoton(false);
-		
 
     // Process command-line arguments
     for (int i = 1; i < argc; ++i) {
@@ -53,7 +52,7 @@ int main(int argc, char *argv[]) {
         else if (!strcmp(argv[i], "--verbose")) options.verbose = true;
         else if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h")) {
             printf("usage: pbrt  [--image || -i ] file.pbrt \n"
-                   "pbrt [--photon || -p] [--wavelength wavelength(nm) || -w wavelength(nm)] [-x dimImageY] [-y dimImageY] [-z dimImageZ] [--resPixel PixelResolution(micrometer) || -r PixelResolution(micrometer)] [ <filenamePhoton.pbrt> ...\n");
+                   "pbrt [--photon || -p] [--wavelength wavelength(nm) || -w wavelength(nm)] [-x dimImageY] [-y dimImageY] [-z dimImageZ] [--resPixel PixelResolution(micrometer) || -r PixelResolution(micrometer)] --theta [Theta incident] --phi [Phi incident] [ <filenamePhoton.pbrt> ...\n");
            return 0;
         }
 	//[DGtal ajout option pour faire de l'absorption]
@@ -64,6 +63,8 @@ int main(int argc, char *argv[]) {
 	else if ((!strcmp(argv[i],"--resPixel")) || (!strcmp(argv[i],"-r"))) { options.resolPixel=atof(argv[++i]); resPix=true; }
 	else if ((!strcmp(argv[i],"--photon")) || (!strcmp(argv[i],"-p"))){ImagePhoton=true; options.photon=true;options.nCores=1;}	
 	else if ((!strcmp(argv[i],"--image")) || (!strcmp(argv[i],"-i"))) { ImagePhoton=true; options.photon=false;}
+	else if ((!strcmp(argv[i],"--theta")) || (!strcmp(argv[i],"-t"))) { options.theta_incid = atof(argv[++i]); }
+	else if ((!strcmp(argv[i],"--phi")) || (!strcmp(argv[i],"-phi"))) { options.phi_incid = atof(argv[++i]); }
 
         else {
 		filenames.push_back(argv[i]);
@@ -73,11 +74,11 @@ int main(int argc, char *argv[]) {
 
 	//[DGtal : test arguments]
 	if (!ImagePhoton) {printf("usage: pbrt  [--image || -i ] file.pbrt \n"
-                   "pbrt [--photon || -p] [--wavelength wavelength(nm) || -w wavelength(nm)] [-x dimImageY] [-y dimImageY] [-z dimImageZ] [--resPixel PixelResolution(micrometer) || -r PixelResolution(micrometer)] [ <filenamePhoton.pbrt> ...\n"); exit(1);}
+                   "pbrt [--photon || -p] [--wavelength wavelength(nm) || -w wavelength(nm)] [-x dimImageY] [-y dimImageY] [-z dimImageZ] [--resPixel PixelResolution(micrometer) || -r PixelResolution(micrometer)]  --theta [Theta incident] --phi [Phi incident] [ <filenamePhoton.pbrt> ...\n"); exit(1);}
 	else if (options.photon && ((!wavelength) || (!dimensionX) || (!dimensionY) || (!dimensionZ) || (!resPix)))
 	{
             printf("usage: pbrt  [--image || -i ] file.pbrt \n"
-                   "pbrt [--photon || -p] [--wavelength wavelength(nm) || -w wavelength(nm)] [-x dimImageY] [-y dimImageY] [-z dimImageZ] [--resPixel PixelResolution(micrometer) || -r PixelResolution(micrometer)] [ <filenamePhoton.pbrt> ...\n");
+                   "pbrt [--photon || -p] [--wavelength wavelength(nm) || -w wavelength(nm)] [-x dimImageY] [-y dimImageY] [-z dimImageZ] [--resPixel PixelResolution(micrometer) || -r PixelResolution(micrometer)]  --theta [Theta incident] --phi [Phi incident]  [ <filenamePhoton.pbrt> ...\n");
 	exit(1);
 	}
 

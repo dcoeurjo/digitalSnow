@@ -5,11 +5,14 @@
 #include <cctype>
 #include <cstring>
 #include <algorithm>
-
+#include <cmath>
 
 using namespace std;
 //variables globales qui cernent la bounding box
 double minX(0), maxX(0), minY(0), maxY(0), minZ(0), maxZ(0);
+
+//variables globales pour l'angle theta/phi
+double theta,phi;
 
 void ecritFichierGeometrie(string fichierNoff, string fichierGeomPbrt);
 
@@ -23,19 +26,21 @@ int main(int argc, char *argv[])
 {
 
   cout << "Warning !! the file provided must be noff without blank lines and with commentary only at the top !\nThe normals provided MUST be inwarded"<< endl; 
-  if (argc < 2) {
-    cout<< "bad syntax. The syntax is : <command> -i input.off -o output";
+  if (argc < 4) {
+    cout<< "bad syntax. The syntax is : <command> -i input.off -o output -t theta ([0:359])-p phi [0:89]"<<std::endl;
     exit(2);
   }
 
   string fichierNoff, fichier_sortie;
   bool entre(false), sortie(false);
-
+  bool thetabool=false, phibool=false;
 
   for (int i=1; i<argc;i++){
-    if (!strcmp(argv[i],"--help") || !strcmp(argv[i],"--help")){cout << "syntax : <command> -i input.noff -o output\n"; return 0;}
+    if (!strcmp(argv[i],"--help") || !strcmp(argv[i],"--help")){cout << "syntax : <command> -i input.noff -o output"<<std::endl; return 0;}
     else if (!strcmp(argv[i],"--input") || !strcmp(argv[i],"-i")) {fichierNoff=argv[++i]; entre=true;}
     else if (!strcmp(argv[i],"--output") || !strcmp(argv[i],"-o")) {fichier_sortie=argv[++i]; sortie=true;}
+    else if (!strcmp(argv[i],"--theta") || !strcmp(argv[i],"-t")) {theta=atof(argv[++i])/180.0*M_PI; thetabool=true;}
+    else if (!strcmp(argv[i],"--phi") || !strcmp(argv[i],"-p")) {phi=atof(argv[++i])/180.0*M_PI; phibool=true;}
   }
 
   if (!entre || !sortie) 
@@ -247,13 +252,20 @@ if (Maximum==0){cout << "geometry file is empty !!!" <<endl; Maximum=1;}
   fichierSortiePbrt <<"## to have a nicest image level up the \"samplesperpixel\" of metropolis\n## to be more rapid, make this number down (but loose quality of image)\n \n \n";
 
   //declaration des attributs generaux
-  fichierSortiePbrt << "Scale -1.000000 1.000000 1.000000 \n \nTranslate -278.000000 -273.000000 500.000000\n \nRenderer \"metropolis\" \"integer samplesperpixel\" [128]\n \nCamera \"perspective\" \"float fov\" [55.000000]\n \nFilm \"image\" \"integer xresolution\" [1000] \"integer yresolution\" [750]\n    \"string filename\" \""<< fichierEXR  <<"\"\n \nPixelFilter \"box\" \n \nWorldBegin\n \n AttributeBegin\nTranslate 340.000000 278.000000 -50\nLightSource \"point\" \"point from\" [0.000000 200.000000 -50.000000] \"color I\" [412300 341100 298600]\nAttributeEnd\n \n";
+  fichierSortiePbrt << "Scale -1.000000 1.000000 1.000000 \n \nTranslate -278.000000 -273.000000 500.000000\n \nRenderer \"metropolis\" \"integer samplesperpixel\" [128]\n \nCamera \"perspective\" \"float fov\" [55.000000]\n \nFilm \"image\" \"integer xresolution\" [1000] \"integer yresolution\" [750]\n    \"string filename\" \""<< fichierEXR  <<"\"\n \nPixelFilter \"box\" \n \nWorldBegin\n \n AttributeBegin\nTranslate 340.000000 278.000000 -50"<<std::endl;
+
+  fichierSortiePbrt<<"LightSource \"point\" \"point from\" [0.000000 200.000000 -50.000000] \"color I\" [412300 341100 298600]\nAttributeEnd\n \n";
 
   //declaration du fond
   fichierSortiePbrt << "#le fond \nAttributeBegin\nMaterial \"matte\" \"color Kd\" [.8 .8 .8]\nShape \"trianglemesh\"  \"integer indices\" [0 2 1 0 3 2] \"point P\" [800.000000 0.000000 0.000000 -250.000000 0.000000 0.000000 -250.000000 0.000000 1000.000000 800.000000 0.000000 1000.000000]\nAttributeEnd\n \n";
 
   //on inclut l'echantillon
-  fichierSortiePbrt << "#include of the sample\nAttributeBegin\nTranslate 180 180 386 \nRotate -30 1 0 0\nRotate 30 0 1 0\nScale "<< (double)256/Maximum << " " << (double)256/Maximum<<" " << (double)256/Maximum<<"\n Rotate -90 1 0 0 \nTranslate "<< -minX <<" " << -minY << " " <<-minZ <<"\nMaterial \"matte\" \"color Kd\" [1 1 1]\nInclude \"" << fichierGeomPbrt<<"\"\nAttributeEnd\n \nWorldEnd";
+  fichierSortiePbrt << "#include of the sample\nAttributeBegin\nTranslate 180 180 386"<<std::endl;
+  fichierSortiePbrt << "Rotate -30 1 0 0"<<std::endl;
+  fichierSortiePbrt << "Rotate 30 0 1 0\nScale "<< (double)256/Maximum << " " << (double)256/Maximum<<" " << (double)256/Maximum<<std::endl;
+  fichierSortiePbrt << "Rotate -90 1 0 0"<<std::endl;
+  fichierSortiePbrt << "Translate "<< -minX <<" " << -minY << " " <<-minZ <<std::endl;
+  fichierSortiePbrt << "Material \"matte\" \"color Kd\" [1 1 1]\nInclude \"" << fichierGeomPbrt<<"\"\nAttributeEnd\n \nWorldEnd";
 
   cout << "pbrt file generated"<<endl;
 }
@@ -271,7 +283,19 @@ void ecritFichierPhoton(string fichierPhoton, string fichierGeomPbrt){
   fichierSortiePhoton << "## causticphotons = number of launched photons;\n## maxdepth= max number of intersections for one photon before stopping\n\nSurfaceIntegrator \"photonmap\" \"integer indirectphotons\" [0] \"integer causticphotons\" [20000]\n\"integer maxspeculardepth\" [100000] \"integer maxphotondepth\" [100000]\n\n";
 
   //definition de la source de lumiere
-  fichierSortiePhoton << "#ligth source : to change the direction of the source change point from and point to, only the direction is important \nWorldBegin\n \nAttributeBegin\nLightSource \"distant\" \"point from\" [0 0 50] \"point to\" [0 0 0]\nAttributeEnd\n\n";
+  fichierSortiePhoton << "#ligth source : to change the direction of the source change point from and point to, only the direction is important \n"
+		      << "WorldBegin\n \n"
+		      << "AttributeBegin\nLightSource \"distant\" \"point from\" ["
+		      << 50 * cos(theta) * sin(phi)<<" "
+		      << 50 * sin(theta) * sin(phi)<<" "
+		      << 50*cos(phi)<< "] " 
+		      << "\"point to\" [0 0 0]\nAttributeEnd\n\n";
+
+  std::cout<< "Lightvector == point from\" ["
+	   << 50 * cos(theta) * sin(phi)<<" "
+	   << 50 * sin(theta) * sin(phi)<<" "
+	   << 50 * cos(phi)<< "] " 
+	   << "\"point to\" [0 0 0]\nAttributeEnd\n\n";
 
   //pour dupliquer l'echantillon et prendre en compte la profondeur
   fichierSortiePhoton << "#to duplicate the sample and take care of the depth, we create a cube wich will surround the sample\n\nAttributeBegin\nMaterial \"glass\"\nShape \"trianglemesh\" \"integer indices\" [0 1 2]\n\"point P\" [0 0 256.001 " << (maxX-minX)/facteur << " 0 256.001 0 " << (maxY-minY)/facteur << " 256.001]\n\"normal N\" [0 0 1 0 0 1 0 0 1]\n\nShape \"trianglemesh\" \"integer indices\" [0 1 2]\n\"point P\" [ "<< (maxX-minX)/facteur<< " 0 256.001 0 "<<(maxY-minY)/facteur<< " 256.001 "<<(maxX-minX)/facteur<< " "<<(maxY-minY)/facteur<< " 256.001]\n\"normal N\" [0 0 1 0 0 1 0 0 1]\n\nShape \"trianglemesh\" \"integer indices\" [0 1 2]\n\"point P\" [0 0 0 " << (maxX-minX)/facteur <<" 0 0 0 " << (maxY-minY)/facteur << " 0]\n\"normal N\" [0 0 -1 0 0 -1 0 0 -1]\n\nShape \"trianglemesh\" \"integer indices\" [0 1 2]\n\"point P\" [" << (maxX-minX)/facteur <<" 0 0 0 " << (maxY-minY)/facteur <<" 0 " << (maxX-minX)/facteur <<" " << (maxY-minY)/facteur <<" 0]\n\"normal N\" [0 0 -1 0 0 -1 0 0 -1]\n\nShape \"trianglemesh\" \"integer indices\" [0 2 1]\n\"point P\" [0 0 0 " << (maxX-minX)/facteur <<" 0 0 0 0 256]\n\"normal N\" [0 -1 0 0 -1 0 0 -1 0]\n\nShape \"trianglemesh\" \"integer indices\" [0 2 1]\n\"point P\" [" << (maxX-minX)/facteur <<" 0 0 0 0 256 " << (maxX-minX)/facteur <<" 0 256]\n\"normal N\" [0 -1 0 0 -1 0 0 -1 0]\n\nShape \"trianglemesh\" \"integer indices\" [0 1 2]\n\"point P\" [0 " << (maxY-minY)/facteur <<" 0 " << (maxX-minX)/facteur <<" " << (maxY-minY)/facteur <<" 0 0 " << (maxY-minY)/facteur <<" 256]\n\"normal N\" [0 1 0 0 1 0 0 1 0]\n\nShape \"trianglemesh\" \"integer indices\" [0 2 1]\n\"point P\" [" << (maxX-minX)/facteur <<" " << (maxY-minY)/facteur <<" 0 0 " << (maxY-minY)/facteur <<" 256 " << (maxX-minX)/facteur <<" " << (maxY-minY)/facteur <<" 256]\n\"normal N\" [0 1 0 0 1 0 0 1 0]\n\nShape \"trianglemesh\" \"integer indices\" [0 1 2]\n\"point P\" [" << (maxX-minX)/facteur <<" 0 256 " << (maxX-minX)/facteur <<" 0 0 " << (maxX-minX)/facteur <<" " << (maxY-minY)/facteur <<" 0]\n\"normal N\" [1 0 0 1 0 0 1 0 0]\n\nShape \"trianglemesh\" \"integer indices\" [0 1 2]\n\"point P\" [" << (maxX-minX)/facteur <<" " << (maxY-minY)/facteur <<" 0 " << (maxX-minX)/facteur <<" 0 256 " << (maxX-minX)/facteur <<" " << (maxY-minY)/facteur <<" 256]\n\"normal N\" [1 0 0 1 0 0 1 0 0]\n\nShape \"trianglemesh\" \"integer indices\" [0 1 2]\n\"point P\" [0 0 0 0 0 256 0 " << (maxY-minY)/facteur <<" 0]\n\"normal N\" [-1 0 0 -1 0 0 -1 0 0]\n\nShape \"trianglemesh\" \"integer indices\" [0 1 2]\n\"point P\" [0 0 256 0 " << (maxY-minY)/facteur <<" 0 0 " << (maxY-minY)/facteur <<" 256]\n\"normal N\" [-1 0 0 -1 0 0 -1 0 0]\n\nAttributeEnd\n";
