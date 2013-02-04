@@ -155,9 +155,73 @@ typedef struct indiceRefrac indiceRefrac;
 //[DGtal : la fonction qui calcule l'absorption en fonction de la longueur d'onde
 void calculAbsor(const Options opt){
   map<int, indiceRefrac> longOnde;
-  int longChoisie(700);
+  int longChoisie(400);
 
   //[DGtal la table de Warren 2008 rentree a la main]
+  longOnde[400].indiceRe=1.3194;
+  longOnde[400].indiceIm=0.00000000271;
+  longOnde[410].indiceRe=1.3185;
+  longOnde[410].indiceIm=0.00000000251;
+  longOnde[420].indiceRe=1.3177;
+  longOnde[420].indiceIm=0.00000000226;
+  longOnde[430].indiceRe=1.3170;
+  longOnde[430].indiceIm=0.00000000208;
+  longOnde[440].indiceRe=1.3163;
+  longOnde[440].indiceIm=0.00000000191;
+  longOnde[450].indiceRe=1.3157;
+  longOnde[450].indiceIm=0.00000000154;
+  longOnde[460].indiceRe=1.3151;
+  longOnde[460].indiceIm=0.00000000153;
+  longOnde[470].indiceRe=1.3145;
+  longOnde[470].indiceIm=0.00000000155;
+  longOnde[480].indiceRe=1.3140;
+  longOnde[480].indiceIm=0.00000000164;
+  longOnde[490].indiceRe=1.3135;
+  longOnde[490].indiceIm=0.00000000178;
+  
+  longOnde[500].indiceRe=1.3130;
+  longOnde[500].indiceIm=0.00000000191;
+  longOnde[510].indiceRe=1.3126;
+  longOnde[510].indiceIm=0.00000000214;
+  longOnde[520].indiceRe=1.3122;
+  longOnde[520].indiceIm=0.00000000226;
+  longOnde[530].indiceRe=1.3118;
+  longOnde[530].indiceIm=0.00000000254;
+  longOnde[540].indiceRe=1.3114;
+  longOnde[540].indiceIm=0.00000000293;
+  longOnde[550].indiceRe=1.3110;
+  longOnde[550].indiceIm=0.00000000311;
+  longOnde[560].indiceRe=1.3106;
+  longOnde[560].indiceIm=0.00000000329;
+  longOnde[570].indiceRe=1.3103;
+  longOnde[570].indiceIm=0.00000000352;
+  longOnde[580].indiceRe=1.3100;
+  longOnde[580].indiceIm=0.00000000404;
+  longOnde[590].indiceRe=1.3097;
+  longOnde[590].indiceIm=0.00000000488;
+  
+  longOnde[600].indiceRe=1.3094;
+  longOnde[600].indiceIm=0.00000000573;
+  longOnde[610].indiceRe=1.3091;
+  longOnde[610].indiceIm=0.00000000689;
+  longOnde[620].indiceRe=1.3088;
+  longOnde[620].indiceIm=0.00000000858;
+  longOnde[630].indiceRe=1.3085;
+  longOnde[630].indiceIm=0.0000000104;
+  longOnde[640].indiceRe=1.3083;
+  longOnde[640].indiceIm=0.0000000122;
+  longOnde[650].indiceRe=1.3080;
+  longOnde[650].indiceIm=0.0000000143;
+  longOnde[660].indiceRe=1.3078;
+  longOnde[660].indiceIm=0.0000000166;
+  longOnde[670].indiceRe=1.3076;
+  longOnde[670].indiceIm=0.0000000189;
+  longOnde[680].indiceRe=1.3073;
+  longOnde[680].indiceIm=0.0000000209;
+  longOnde[690].indiceRe=1.3071;
+  longOnde[690].indiceIm=0.000000029;
+  
+ 
   longOnde[700].indiceRe=1.3069;
   longOnde[700].indiceIm=0.000000029;
   longOnde[710].indiceRe=1.3067;
@@ -435,7 +499,7 @@ void calculAbsor(const Options opt){
 
 
   //[DGtal on regarde la longueur d'onde choisie = la plus proche de celle donnee dans la table]
-  if (opt.lOnde>700 && opt.lOnde<=2600){
+  if (opt.lOnde>400 && opt.lOnde<=2600){
     for (map<int, indiceRefrac>::iterator it=longOnde.begin(); it!=longOnde.end();it++)
       {	if (opt.lOnde <= it->first) {
 	  longChoisie=it->first;

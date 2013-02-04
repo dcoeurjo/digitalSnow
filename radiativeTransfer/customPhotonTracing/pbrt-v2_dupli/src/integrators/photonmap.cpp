@@ -963,11 +963,11 @@ void PhotonShootingTask::Run() {
       }
 
     //[DGtal le fichier de brdf]
-    fichierBRDF <<"# theta_incident || phi_incident || theta || phi || number of Photons\n"; 
+    fichierBRDF <<"# theta_incident || phi_incident || theta || phi || number of Photons/total\n"; 
     for(map<angles, int >::iterator it=energieBRDF.begin(); it!=energieBRDF.end(); ++it)
       {
 
-	fichierBRDF << theta_incid << " "<< phi_incid <<" "<< it->first.theta << " "  << it->first.phi << " " << it->second << std::endl;
+	fichierBRDF << theta_incid << " "<< phi_incid <<" "<< it->first.theta << " "  << it->first.phi << " " << (double)it->second/nombrePhotonTotal << std::endl;
       }
 
     printf("\nstatistics :\nlaunched %d photons\nabsorbed photons : %d\nalbedo photons : %d   albedo : %f\nlost photons %d\n",nombrePhotonTotal+compteurPhotonPerdu,compteurPhotonAbsorbe,compteurAlbedo, (float)compteurAlbedo/nombrePhotonTotal,compteurPhotonPerdu); 

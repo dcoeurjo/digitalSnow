@@ -55,7 +55,7 @@ int main(int argc, char *argv[]){
   int nColonnes(4*nLignes);
   float gain[nLignes][nColonnes];
   int phiDegre(0), thetaDegre(0);
-  int nombrePhotonTotal(0);
+  //int nombrePhotonTotal(0);
   char b;
   string a,ligne;
 
@@ -78,10 +78,12 @@ int main(int argc, char *argv[]){
 	}
     }
 
-
+  double thetai, phii;
   //on remplit le tableau gain avec la premiere ligne du fichier
-  theta=atof(a.c_str());
-  fichierEntree >>phi;
+  thetai=atof(a.c_str());
+  fichierEntree >> phii;
+  fichierEntree >> theta;
+  fichierEntree >> phi;
   fichierEntree >> nombrePhoton;
   phiDegre=floor(phi);
   thetaDegre=floor(theta); 		
@@ -91,11 +93,13 @@ int main(int argc, char *argv[]){
   if (thetaDegre >= 360) thetaDegre=359;
   if (thetaDegre < 0) thetaDegre=0;
   gain[phiDegre*nLignes/90][thetaDegre*nLignes/90]+=nombrePhoton;
-  nombrePhotonTotal+=nombrePhoton;
+  // nombrePhotonTotal+=nombrePhoton;
 
   //on remplit gain avec le reste du fichier
   while (!fichierEntree.eof())
     {
+      fichierEntree >> thetai;
+      fichierEntree >> phii;
       fichierEntree >> theta;
       fichierEntree >> phi;
       fichierEntree >> nombrePhoton;
@@ -108,31 +112,27 @@ int main(int argc, char *argv[]){
       if (thetaDegre >= 360) thetaDegre=359;
       if (thetaDegre < 0) thetaDegre=0;
       gain[phiDegre*nLignes/90][thetaDegre*nLignes/90]+=nombrePhoton;
-      nombrePhotonTotal+=nombrePhoton;
+      //    nombrePhotonTotal+=nombrePhoton;
     }
-
-
 
   //on normalise le gain pour avoir la DCRF
   for (i=0;i<nLignes;i++)
     for (j=0;j<nColonnes;j++)
       gain[i][j]=gain[i][j]*180/(M_PI*deltaAngle*cos(i*M_PI*deltaAngle/180)*fabs((cos((i+1)*M_PI*deltaAngle/180)-cos(i*M_PI*deltaAngle/180))));
 		
-
-
   //on renvoie dans le fichier de sortie les valeurs
   fichierSortie <<"# this file provides the anisotropic reflectance factor R, a variant of the BRDF :\n# R = BRDF * Pi / Albedo \n# pour tracer avec gnuplot :\n#splot \"file.txt\" using 1:2:3:4 with pm3d\n"; 
 	
   for (j=0;j<360; j++){
     for (i=0;i<90;i++)
-      {fichierSortie << cos(j*M_PI/180)*cos((90-i)*M_PI/180) << " " << sin(j*M_PI/180)*cos((90-i)*M_PI/180) << " " << sin((90-i)*M_PI/180) << " " << gain[i*nLignes/90][j*nLignes/90]*M_PI/nombrePhotonTotal<< endl; 					
+      {fichierSortie << cos(j*M_PI/180)*cos((90-i)*M_PI/180) << " " << sin(j*M_PI/180)*cos((90-i)*M_PI/180) << " " << sin((90-i)*M_PI/180) << " " << gain[i*nLignes/90][j*nLignes/90]*M_PI/*/nombrePhotonTotal*/<< endl; 					
       }
 
     fichierSortie << endl;		
   }
 
   for (i=0;i<90;i++)
-    fichierSortie << cos(360*M_PI/180)*cos((90-i)*M_PI/180) <<" " << sin(360*M_PI/180)*cos((90-i)*M_PI/180) << " " << sin((90-i)*M_PI/180) << " " << gain[i*nLignes/90][0]*M_PI/nombrePhotonTotal<< endl; 		
+    fichierSortie << cos(360*M_PI/180)*cos((90-i)*M_PI/180) <<" " << sin(360*M_PI/180)*cos((90-i)*M_PI/180) << " " << sin((90-i)*M_PI/180) << " " << gain[i*nLignes/90][0]*M_PI/*/nombrePhotonTotal*/<< endl; 		
 
   return 0;
 

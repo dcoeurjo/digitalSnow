@@ -6,6 +6,7 @@
 #include <cstring>
 #include <algorithm>
 #include <cmath>
+#include <assert.h>
 
 using namespace std;
 //variables globales qui cernent la bounding box
@@ -101,12 +102,17 @@ void ecritFichierGeometrie(string fichierNoff, string fichierGeomPbrt)
   int indice(0), indice1(0);
   float point[3], vecteur[3];
 
-  //on se place à l'entrée du fichier et on saute les commentaires
+  char lignee[256];
+  
+  fichierEntree.getline(lignee,256);
+  std::cout<< "lit = "<<lignee<<std::endl;
+  
 
-  fichierEntree.seekg(0,ios::beg);
+  //on se place à l'entrée du fichier et on saute les commentaires
   while (true)
     {	
       fichierEntree >> a;
+      std::cout<< "lit = "<<a<<std::endl;
       if (isdigit(a.c_str()[0])) break;
       else if (a.c_str()[0]=='#')
 	{
@@ -115,7 +121,7 @@ void ecritFichierGeometrie(string fichierNoff, string fichierGeomPbrt)
 	}
     }
 
-
+  std::cout << "A string="<< a<<std::endl;
   // on initialise le nombre de points et le nombre de faces
   nombrePoints=atoi(a.c_str());
   fichierEntree >> nombreFaces;
@@ -155,6 +161,7 @@ void ecritFichierGeometrie(string fichierNoff, string fichierGeomPbrt)
 
   fichierVecteur << -vecteur[2] <<"\n";
 
+  std::cout << "NbPoints = "<<nombrePoints<<"  face="<<nombreFaces<<std::endl;
 
   // on remplit les fichiers points et vecteur jusqu'à ce qu'il n'y ait plus de points
   for (i=1;i<nombrePoints;i++)
@@ -164,6 +171,8 @@ void ecritFichierGeometrie(string fichierNoff, string fichierGeomPbrt)
       if (point[0]<minX) minX=point[0];	
       if (point[0]>maxX) maxX=point[0];	
       fichierPoint << point[0] << " "; 
+
+   
 
       fichierEntree >> point[1];
       if (point[1]<minY) minY=point[1];	
