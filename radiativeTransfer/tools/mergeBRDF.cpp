@@ -7,16 +7,15 @@
 
 #define Theta 360
 #define Phi 90
-#define L 32
+#define L 30
 
 
 float *BRDF;
 using namespace std;
 
-int LAMBDA[31]={400,410,420,430,440,450,460,470,480,490,
-	    500,510,520,530,540,550,560,570,580,590,
-	    600,610,620,630,640,650,660,670,680,690,
-	    700};
+int LAMBDA[30]={400,410,420,430,440,450,460,470,480,490,
+		500,510,520,530,540,550,560,570,580,590,
+		600,610,620,630,640,650,660,670,680,690};
 
 /** 
  * clear the partial BRDF table
@@ -44,11 +43,9 @@ void processFile(string basename, unsigned int thetai, unsigned int phii, unsign
     +boost::lexical_cast<std::string>(LAMBDA[lambda] )+ "_"
     +boost::lexical_cast<std::string>(thetai )+"_"+boost::lexical_cast<std::string>(phii )+"_brdf.txt" ;
 
-  cout<< "Filename= "<<title<<std::endl;
+  cerr<< "Filename= "<<title<<std::endl;
   
-  return;
   f=fopen(title.c_str(), "r+t");
-  
   while (true)
     {	
       b = fgetc(f);
@@ -95,16 +92,18 @@ void flush( unsigned int thetai, unsigned int phii)
 
 void processAll(string basename)
 {
-  for(unsigned int thetai= 0 ;thetai < 360; ++thetai)
-    for(unsigned int phii= 0 ;phii < 90; ++phii)
+  for(unsigned int thetai= 0 ;thetai < 1; ++thetai)
+    for(unsigned int phii= 0 ;phii < 9; ++phii)
+      //  for(unsigned int thetai= 0 ;thetai < 360; ++thetai)
+      //for(unsigned int phii= 0 ;phii < 90; ++phii)
       {
 	//Cleanup 
 	//clear();
 	for(unsigned int lambda=0; lambda< L ; ++lambda)
 	  {
-	    processFile(basename, thetai, phii, lambda);
+	    processFile(basename, thetai, phii*10, lambda);
 	  }
-	//flush();
+	flush(thetai,phii);
       } 
 }
 
@@ -125,6 +124,7 @@ int main(int argc, char **argv)
   //  -  store the energy for the reflexion angles
   //  - flush the partial BRDF
   
+
   string basename = "Data/I01isonew_256/temp";
   
   processAll(basename);
